@@ -1,0 +1,1594 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>3D Tic Tac Toe</title>
+
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      overflow: hidden;
+      background: #080b12;
+      font-family: Arial, sans-serif;
+      touch-action: none;
+    }
+
+    #title {
+      position: fixed;
+      top: 18px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: white;
+      background: rgba(0, 0, 0, 0.45);
+      padding: 10px 20px;
+      border-radius: 20px;
+      backdrop-filter: blur(10px);
+      z-index: 10;
+      font-size: 16px;
+      font-weight: bold;
+      letter-spacing: 1px;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+
+    #score {
+      position: fixed;
+      top: 62px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: white;
+      background: rgba(0, 0, 0, 0.35);
+      padding: 8px 16px;
+      border-radius: 15px;
+      z-index: 10;
+      font-size: 13px;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+
+    #status {
+      position: fixed;
+      bottom: 25px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: white;
+      background: rgba(0, 0, 0, 0.55);
+      padding: 12px 25px;
+      border-radius: 15px;
+      backdrop-filter: blur(10px);
+      z-index: 10;
+      text-align: center;
+      pointer-events: none;
+      font-size: 15px;
+      white-space: nowrap;
+    }
+
+    #loading {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 18px;
+      background: #080b12;
+      z-index: 50;
+    }
+
+    #modeMenu {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(3, 7, 18, 0.72);
+      backdrop-filter: blur(12px);
+      z-index: 40;
+    }
+
+    .menu {
+      width: min(90%, 380px);
+      padding: 30px;
+      border-radius: 25px;
+      background: rgba(15, 23, 42, 0.92);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      box-shadow: 0 20px 70px rgba(0, 0, 0, 0.5);
+      text-align: center;
+    }
+
+    .menu h1 {
+      color: white;
+      font-size: 26px;
+      margin-bottom: 8px;
+    }
+
+    .menu p {
+      color: #94a3b8;
+      font-size: 14px;
+      margin-bottom: 25px;
+    }
+
+    .modeButton {
+      width: 100%;
+      padding: 16px;
+      margin-top: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 16px;
+      background: rgba(30, 41, 59, 0.9);
+      color: white;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    .modeButton:hover {
+      background: rgba(56, 189, 248, 0.25);
+      border-color: #38bdf8;
+      transform: translateY(-2px);
+    }
+
+    .modeButton:active {
+      transform: scale(0.97);
+    }
+
+    #restart {
+      display: none;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 35;
+      padding: 15px 30px;
+      border: none;
+      border-radius: 15px;
+      background: #38bdf8;
+      color: #06111a;
+      font-size: 17px;
+      font-weight: bold;
+      box-shadow: 0 10px 40px rgba(56, 189, 248, 0.4);
+      cursor: pointer;
+    }
+
+    #restart:active {
+      transform: translate(-50%, -50%) scale(0.94);
+    }
+
+    #modeInfo {
+      position: fixed;
+      top: 100px;
+      left: 50%;
+      transform: translateX(-50%);
+      color: #94a3b8;
+      font-size: 12px;
+      z-index: 10;
+      pointer-events: none;
+    }
+  </style>
+</head>
+
+<body>
+
+  <div id="loading">
+    Loading 3D Tic Tac Toe...
+  </div>
+
+  <div id="modeMenu">
+    <div class="menu">
+
+      <h1>❌ 3D TIC TAC TOE ⭕</h1>
+
+      <p>
+        Select Game Mode
+      </p>
+
+      <button
+        class="modeButton"
+        id="aiMode">
+        🤖 Player vs AI
+      </button>
+
+      <button
+        class="modeButton"
+        id="twoPlayerMode">
+        👥 2 Players
+      </button>
+
+    </div>
+  </div>
+
+  <div id="title">
+    ❌ 3D TIC TAC TOE ⭕
+  </div>
+
+  <div id="score">
+    Player 1: 0 &nbsp; | &nbsp; Player 2: 0 &nbsp; | &nbsp; Draw: 0
+  </div>
+
+  <div id="modeInfo">
+    Mode: Player vs AI
+  </div>
+
+  <div id="status">
+    Your Turn — ❌
+  </div>
+
+  <button id="restart">
+    🔄 Restart Game
+  </button>
+
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js",
+      "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"
+    }
+  }
+  </script>
+
+  <script type="module">
+
+    import * as THREE from "three";
+
+    import {
+      OrbitControls
+    } from "three/addons/controls/OrbitControls.js";
+
+
+    const scene =
+      new THREE.Scene();
+
+    scene.background =
+      new THREE.Color(0x080b12);
+
+
+    const camera =
+      new THREE.PerspectiveCamera(
+        45,
+        window.innerWidth /
+        window.innerHeight,
+        0.1,
+        200
+      );
+
+    camera.position.set(
+      0,
+      35,
+      10
+    );
+
+    camera.lookAt(
+      0,
+      0,
+      0
+    );
+
+
+    const renderer =
+      new THREE.WebGLRenderer({
+        antialias: true
+      });
+
+    renderer.setSize(
+      window.innerWidth,
+      window.innerHeight
+    );
+
+    renderer.setPixelRatio(
+      Math.min(
+        window.devicePixelRatio,
+        2
+      )
+    );
+
+    renderer.shadowMap.enabled = true;
+
+    renderer.shadowMap.type =
+      THREE.PCFSoftShadowMap;
+
+    document.body.appendChild(
+      renderer.domElement
+    );
+
+
+    const controls =
+      new OrbitControls(
+        camera,
+        renderer.domElement
+      );
+
+    controls.enableDamping = true;
+
+    controls.target.set(
+      0,
+      0,
+      0
+    );
+
+    controls.minDistance = 9;
+
+    controls.maxDistance = 35;
+
+    controls.maxPolarAngle =
+      Math.PI / 2.1;
+
+
+    const ambientLight =
+      new THREE.HemisphereLight(
+        0xffffff,
+        0x222233,
+        2.2
+      );
+
+    scene.add(
+      ambientLight
+    );
+
+
+    const light =
+      new THREE.DirectionalLight(
+        0xffffff,
+        3
+      );
+
+    light.position.set(
+      5,
+      12,
+      8
+    );
+
+    light.castShadow = true;
+
+    light.shadow.mapSize.width =
+      2048;
+
+    light.shadow.mapSize.height =
+      2048;
+
+    scene.add(
+      light
+    );
+
+
+    const pointLight =
+      new THREE.PointLight(
+        0x38bdf8,
+        3,
+        20
+      );
+
+    pointLight.position.set(
+      0,
+      5,
+      0
+    );
+
+    scene.add(
+      pointLight
+    );
+
+
+    const boardGeometry =
+      new THREE.BoxGeometry(
+        9,
+        0.7,
+        9
+      );
+
+    const boardMaterial =
+      new THREE.MeshStandardMaterial({
+        color: 0x182235,
+        roughness: 0.45,
+        metalness: 0.25
+      });
+
+    const board =
+      new THREE.Mesh(
+        boardGeometry,
+        boardMaterial
+      );
+
+    board.position.y =
+      -0.35;
+
+    board.receiveShadow = true;
+
+    scene.add(
+      board
+    );
+
+
+    const gridMaterial =
+      new THREE.MeshStandardMaterial({
+        color: 0x38bdf8,
+        emissive: 0x075985,
+        emissiveIntensity: 0.7,
+        metalness: 0.4,
+        roughness: 0.3
+      });
+
+
+    const lineGeometry =
+      new THREE.BoxGeometry(
+        0.12,
+        0.15,
+        9
+      );
+
+
+    const line1 =
+      new THREE.Mesh(
+        lineGeometry,
+        gridMaterial
+      );
+
+    line1.position.set(
+      -1.5,
+      0.08,
+      0
+    );
+
+    scene.add(
+      line1
+    );
+
+
+    const line2 =
+      new THREE.Mesh(
+        lineGeometry,
+        gridMaterial
+      );
+
+    line2.position.set(
+      1.5,
+      0.08,
+      0
+    );
+
+    scene.add(
+      line2
+    );
+
+
+    const lineGeometryHorizontal =
+      new THREE.BoxGeometry(
+        9,
+        0.15,
+        0.12
+      );
+
+
+    const line3 =
+      new THREE.Mesh(
+        lineGeometryHorizontal,
+        gridMaterial
+      );
+
+    line3.position.set(
+      0,
+      0.08,
+      -1.5
+    );
+
+    scene.add(
+      line3
+    );
+
+
+    const line4 =
+      new THREE.Mesh(
+        lineGeometryHorizontal,
+        gridMaterial
+      );
+
+    line4.position.set(
+      0,
+      0.08,
+      1.5
+    );
+
+    scene.add(
+      line4
+    );
+
+
+    const borderGeometry =
+      new THREE.BoxGeometry(
+        9.4,
+        0.3,
+        9.4
+      );
+
+    const borderMaterial =
+      new THREE.MeshBasicMaterial({
+        color: 0x38bdf8,
+        wireframe: true
+      });
+
+    const border =
+      new THREE.Mesh(
+        borderGeometry,
+        borderMaterial
+      );
+
+    border.position.y =
+      0.05;
+
+    scene.add(
+      border
+    );
+
+
+    const cells = [];
+
+    const cellMeshes = [];
+
+    const cellSize = 3;
+
+
+    for (
+      let row = 0;
+      row < 3;
+      row++
+    ) {
+
+      for (
+        let col = 0;
+        col < 3;
+        col++
+      ) {
+
+        const index =
+          row * 3 + col;
+
+        const geometry =
+          new THREE.BoxGeometry(
+            2.8,
+            0.12,
+            2.8
+          );
+
+        const material =
+          new THREE.MeshStandardMaterial({
+            color: 0x111827,
+            transparent: true,
+            opacity: 0.55,
+            roughness: 0.5
+          });
+
+        const cell =
+          new THREE.Mesh(
+            geometry,
+            material
+          );
+
+        cell.position.set(
+          (col - 1) * cellSize,
+          0.12,
+          (row - 1) * cellSize
+        );
+
+        cell.receiveShadow = true;
+
+        cell.userData.index =
+          index;
+
+        scene.add(
+          cell
+        );
+
+        cellMeshes.push(
+          cell
+        );
+
+        cells.push(
+          null
+        );
+
+      }
+
+    }
+
+
+    const xMaterial =
+      new THREE.MeshStandardMaterial({
+        color: 0x22c55e,
+        emissive: 0x064e3b,
+        emissiveIntensity: 0.8,
+        metalness: 0.35,
+        roughness: 0.25
+      });
+
+
+    const oMaterial =
+      new THREE.MeshStandardMaterial({
+        color: 0xf43f5e,
+        emissive: 0x7f1d1d,
+        emissiveIntensity: 0.7,
+        metalness: 0.35,
+        roughness: 0.25
+      });
+
+
+    const pieces = [];
+
+
+    function createX(
+      x,
+      z
+    ) {
+
+      const group =
+        new THREE.Group();
+
+      const geometry =
+        new THREE.BoxGeometry(
+          0.38,
+          0.55,
+          2.0
+        );
+
+      const bar1 =
+        new THREE.Mesh(
+          geometry,
+          xMaterial
+        );
+
+      const bar2 =
+        new THREE.Mesh(
+          geometry,
+          xMaterial
+        );
+
+      bar1.rotation.y =
+        Math.PI / 4;
+
+      bar2.rotation.y =
+        -Math.PI / 4;
+
+      group.add(
+        bar1
+      );
+
+      group.add(
+        bar2
+      );
+
+      group.position.set(
+        x,
+        0.75,
+        z
+      );
+
+      group.traverse(
+        function(object) {
+
+          if (
+            object.isMesh
+          ) {
+
+            object.castShadow = true;
+
+          }
+
+        }
+      );
+
+      scene.add(
+        group
+      );
+
+      pieces.push(
+        group
+      );
+
+    }
+
+
+    function createO(
+      x,
+      z
+    ) {
+
+      const geometry =
+        new THREE.TorusGeometry(
+          0.78,
+          0.25,
+          16,
+          32
+        );
+
+      const mesh =
+        new THREE.Mesh(
+          geometry,
+          oMaterial
+        );
+
+      mesh.position.set(
+        x,
+        0.75,
+        z
+      );
+
+      mesh.rotation.x =
+        Math.PI / 2;
+
+      mesh.castShadow = true;
+
+      scene.add(
+        mesh
+      );
+
+      pieces.push(
+        mesh
+      );
+
+    }
+
+
+    const winningLines = [
+
+      [0, 1, 2],
+      [3, 4, 5],
+      [6, 7, 8],
+
+      [0, 3, 6],
+      [1, 4, 7],
+      [2, 5, 8],
+
+      [0, 4, 8],
+      [2, 4, 6]
+
+    ];
+
+
+    let player1Score = 0;
+    let player2Score = 0;
+    let drawScore = 0;
+
+    let gameMode = "ai";
+
+    let currentPlayer = "X";
+
+    let gameOver = true;
+
+
+    const raycaster =
+      new THREE.Raycaster();
+
+    const mouse =
+      new THREE.Vector2();
+
+
+    function updateScore() {
+
+      if (
+        gameMode === "ai"
+      ) {
+
+        document.getElementById(
+          "score"
+        ).innerHTML =
+          "You: " +
+          player1Score +
+          " &nbsp; | &nbsp; AI: " +
+          player2Score +
+          " &nbsp; | &nbsp; Draw: " +
+          drawScore;
+
+      } else {
+
+        document.getElementById(
+          "score"
+        ).innerHTML =
+          "Player 1: " +
+          player1Score +
+          " &nbsp; | &nbsp; Player 2: " +
+          player2Score +
+          " &nbsp; | &nbsp; Draw: " +
+          drawScore;
+
+      }
+
+    }
+
+
+    function updateStatus() {
+
+      if (
+        gameMode === "ai"
+      ) {
+
+        if (
+          currentPlayer === "X"
+        ) {
+
+          document.getElementById(
+            "status"
+          ).innerText =
+            "Your Turn — ❌";
+
+        } else {
+
+          document.getElementById(
+            "status"
+          ).innerText =
+            "🤖 AI Thinking...";
+
+        }
+
+      } else {
+
+        if (
+          currentPlayer === "X"
+        ) {
+
+          document.getElementById(
+            "status"
+          ).innerText =
+            "Player 1 Turn — ❌";
+
+        } else {
+
+          document.getElementById(
+            "status"
+          ).innerText =
+            "Player 2 Turn — ⭕";
+
+        }
+
+      }
+
+    }
+
+
+    function checkWinner() {
+
+      for (
+        const line of winningLines
+      ) {
+
+        const a =
+          cells[line[0]];
+
+        const b =
+          cells[line[1]];
+
+        const c =
+          cells[line[2]];
+
+        if (
+          a &&
+          a === b &&
+          b === c
+        ) {
+
+          return {
+            winner: a,
+            line: line
+          };
+
+        }
+
+      }
+
+
+      if (
+        cells.every(
+          function(cell) {
+
+            return cell !== null;
+
+          }
+        )
+      ) {
+
+        return {
+          winner: "draw",
+          line: null
+        };
+
+      }
+
+
+      return null;
+
+    }
+
+
+    function highlightWinner(
+      line
+    ) {
+
+      if (!line) {
+        return;
+      }
+
+      line.forEach(
+        function(index) {
+
+          cellMeshes[index].material =
+            new THREE.MeshStandardMaterial({
+              color: 0xfacc15,
+              emissive: 0xca8a04,
+              emissiveIntensity: 1,
+              transparent: true,
+              opacity: 0.85
+            });
+
+        }
+      );
+
+    }
+
+
+    function finishGame(
+      result
+    ) {
+
+      gameOver = true;
+
+      highlightWinner(
+        result.line
+      );
+
+
+      if (
+        result.winner === "X"
+      ) {
+
+        player1Score++;
+
+        if (
+          gameMode === "ai"
+        ) {
+
+          document.getElementById(
+            "status"
+          ).innerText =
+            "🏆 You Win!";
+
+        } else {
+
+          document.getElementById(
+            "status"
+          ).innerText =
+            "🏆 Player 1 Wins!";
+
+        }
+
+      }
+
+      else if (
+        result.winner === "O"
+      ) {
+
+        player2Score++;
+
+        if (
+          gameMode === "ai"
+        ) {
+
+          document.getElementById(
+            "status"
+          ).innerText =
+            "🤖 AI Wins!";
+
+        } else {
+
+          document.getElementById(
+            "status"
+          ).innerText =
+            "🏆 Player 2 Wins!";
+
+        }
+
+      }
+
+      else {
+
+        drawScore++;
+
+        document.getElementById(
+          "status"
+        ).innerText =
+          "🤝 Draw!";
+
+      }
+
+
+      updateScore();
+
+      document.getElementById(
+        "restart"
+      ).style.display =
+        "block";
+
+    }
+
+
+    function placePiece(
+      index,
+      player
+    ) {
+
+      if (
+        cells[index] !== null ||
+        gameOver
+      ) {
+
+        return false;
+
+      }
+
+
+      cells[index] =
+        player;
+
+
+      const row =
+        Math.floor(
+          index / 3
+        );
+
+      const col =
+        index % 3;
+
+
+      const x =
+        (col - 1) * cellSize;
+
+      const z =
+        (row - 1) * cellSize;
+
+
+      if (
+        player === "X"
+      ) {
+
+        createX(
+          x,
+          z
+        );
+
+      } else {
+
+        createO(
+          x,
+          z
+        );
+
+      }
+
+
+      const result =
+        checkWinner();
+
+
+      if (
+        result
+      ) {
+
+        finishGame(
+          result
+        );
+
+        return true;
+
+      }
+
+
+      currentPlayer =
+        player === "X"
+          ? "O"
+          : "X";
+
+
+      updateStatus();
+
+      return true;
+
+    }
+
+
+    function getBestMove() {
+
+      const empty = [];
+
+
+      for (
+        let i = 0;
+        i < 9;
+        i++
+      ) {
+
+        if (
+          cells[i] === null
+        ) {
+
+          empty.push(i);
+
+        }
+
+      }
+
+
+      if (
+        empty.length === 0
+      ) {
+
+        return null;
+
+      }
+
+
+      for (
+        const index of empty
+      ) {
+
+        cells[index] =
+          "O";
+
+        const result =
+          checkWinner();
+
+        cells[index] =
+          null;
+
+
+        if (
+          result &&
+          result.winner === "O"
+        ) {
+
+          return index;
+
+        }
+
+      }
+
+
+      for (
+        const index of empty
+      ) {
+
+        cells[index] =
+          "X";
+
+        const result =
+          checkWinner();
+
+        cells[index] =
+          null;
+
+
+        if (
+          result &&
+          result.winner === "X"
+        ) {
+
+          return index;
+
+        }
+
+      }
+
+
+      if (
+        cells[4] === null
+      ) {
+
+        return 4;
+
+      }
+
+
+      const corners = [
+        0,
+        2,
+        6,
+        8
+      ];
+
+
+      const freeCorners =
+        corners.filter(
+          function(index) {
+
+            return (
+              cells[index] === null
+            );
+
+          }
+        );
+
+
+      if (
+        freeCorners.length > 0
+      ) {
+
+        return freeCorners[
+          Math.floor(
+            Math.random() *
+            freeCorners.length
+          )
+        ];
+
+      }
+
+
+      return empty[
+        Math.floor(
+          Math.random() *
+          empty.length
+        )
+      ];
+
+    }
+
+
+    function aiMove() {
+
+      if (
+        gameOver ||
+        gameMode !== "ai" ||
+        currentPlayer !== "O"
+      ) {
+
+        return;
+
+      }
+
+
+      const move =
+        getBestMove();
+
+
+      if (
+        move !== null
+      ) {
+
+        placePiece(
+          move,
+          "O"
+        );
+
+      }
+
+    }
+
+
+    function handleClick(
+      event
+    ) {
+
+      if (
+        gameOver
+      ) {
+
+        return;
+
+      }
+
+
+      if (
+        gameMode === "ai" &&
+        currentPlayer !== "X"
+      ) {
+
+        return;
+
+      }
+
+
+      const rect =
+        renderer.domElement.getBoundingClientRect();
+
+
+      mouse.x =
+        (
+          (event.clientX - rect.left) /
+          rect.width
+        ) * 2 - 1;
+
+
+      mouse.y =
+        -(
+          (event.clientY - rect.top) /
+          rect.height
+        ) * 2 + 1;
+
+
+      raycaster.setFromCamera(
+        mouse,
+        camera
+      );
+
+
+      const intersections =
+        raycaster.intersectObjects(
+          cellMeshes
+        );
+
+
+      if (
+        intersections.length === 0
+      ) {
+
+        return;
+
+      }
+
+
+      const cell =
+        intersections[0].object;
+
+
+      const index =
+        cell.userData.index;
+
+
+      if (
+        cells[index] !== null
+      ) {
+
+        return;
+
+      }
+
+
+      const player =
+        currentPlayer;
+
+
+      placePiece(
+        index,
+        player
+      );
+
+
+      if (
+        gameOver
+      ) {
+
+        return;
+
+      }
+
+
+      if (
+        gameMode === "ai" &&
+        currentPlayer === "O"
+      ) {
+
+        setTimeout(
+          function() {
+
+            aiMove();
+
+          },
+          450
+        );
+
+      }
+
+    }
+
+
+    renderer.domElement.addEventListener(
+      "pointerdown",
+      handleClick
+    );
+
+
+    function startGame(
+      mode
+    ) {
+
+      gameMode =
+        mode;
+
+      document.getElementById(
+        "modeMenu"
+      ).style.display =
+        "none";
+
+
+      if (
+        mode === "ai"
+      ) {
+
+        document.getElementById(
+          "modeInfo"
+        ).innerText =
+          "Mode: Player vs AI";
+
+      } else {
+
+        document.getElementById(
+          "modeInfo"
+        ).innerText =
+          "Mode: 2 Players";
+
+      }
+
+
+      resetBoard();
+
+    }
+
+
+    function resetBoard() {
+
+      for (
+        const piece of pieces
+      ) {
+
+        scene.remove(
+          piece
+        );
+
+      }
+
+
+      pieces.length = 0;
+
+
+      for (
+        let i = 0;
+        i < 9;
+        i++
+      ) {
+
+        cells[i] =
+          null;
+
+
+        cellMeshes[i].material =
+          new THREE.MeshStandardMaterial({
+            color: 0x111827,
+            transparent: true,
+            opacity: 0.55,
+            roughness: 0.5
+          });
+
+      }
+
+
+      currentPlayer =
+        "X";
+
+      gameOver =
+        false;
+
+
+      document.getElementById(
+        "restart"
+      ).style.display =
+        "none";
+
+
+      updateScore();
+
+      updateStatus();
+
+    }
+
+
+    document.getElementById(
+      "aiMode"
+    ).addEventListener(
+      "click",
+      function() {
+
+        startGame(
+          "ai"
+        );
+
+      }
+    );
+
+
+    document.getElementById(
+      "twoPlayerMode"
+    ).addEventListener(
+      "click",
+      function() {
+
+        startGame(
+          "2player"
+        );
+
+      }
+    );
+
+
+    document.getElementById(
+      "restart"
+    ).addEventListener(
+      "click",
+      function() {
+
+        resetBoard();
+
+      }
+    );
+
+
+    document.getElementById(
+      "loading"
+    ).style.display =
+      "none";
+
+
+    const clock =
+      new THREE.Clock();
+
+
+    function animate() {
+
+      requestAnimationFrame(
+        animate
+      );
+
+
+      const delta =
+        clock.getDelta();
+
+
+      pieces.forEach(
+        function(piece) {
+
+          piece.rotation.y +=
+            delta * 0.35;
+
+        }
+      );
+
+
+      controls.update();
+
+
+      renderer.render(
+        scene,
+        camera
+      );
+
+    }
+
+
+    animate();
+
+
+    window.addEventListener(
+      "resize",
+      function() {
+
+        camera.aspect =
+          window.innerWidth /
+          window.innerHeight;
+
+        camera.updateProjectionMatrix();
+
+
+        renderer.setSize(
+          window.innerWidth,
+          window.innerHeight
+        );
+
+      }
+    );
+
+  </script>
+
+</body>
+
+</html>
